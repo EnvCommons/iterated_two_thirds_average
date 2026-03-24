@@ -80,10 +80,13 @@ class IteratedTwoThirdsAverageEnvironment(Environment):
         if isinstance(observation, list):
             if not observation:
                 return ""
-            last = observation[-1]
-            if isinstance(last, tuple) and len(last) >= 2:
-                return str(last[1])
-            return str(last)
+            parts = []
+            for item in observation:
+                if isinstance(item, tuple) and len(item) >= 2:
+                    parts.append(str(item[1]))
+                else:
+                    parts.append(str(item))
+            return "\n".join(parts)
         return str(observation)
 
     def _map_reward(self, ta_rewards: dict, player_id: int) -> float:
@@ -112,7 +115,7 @@ class IteratedTwoThirdsAverageEnvironment(Environment):
 
     async def _run_opponent_turns(self, current_player_id: int, current_observation) -> str:
         while current_player_id != self.AGENT_PLAYER_ID:
-            obs_text = current_observation if isinstance(current_observation, str) else str(current_observation)
+            obs_text = self._format_observation(current_observation)
             opponent_action = await self._get_opponent_action(obs_text, current_player_id)
             done, info = self.ta_env.step(action=opponent_action)
             if done:
